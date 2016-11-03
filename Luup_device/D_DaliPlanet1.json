@@ -1,0 +1,768 @@
+{
+    "flashicon": "https://a-lurker.github.io/icons/DALI_planet_50_50.png",
+    "default_icon": "https://a-lurker.github.io/icons/DALI_planet_50_50.png",
+    "inScene": "1",
+    "Tabs": [
+        {
+            "Label": {
+                "lang_tag": "test_devices",
+                "text": "Test Devices"
+            },
+            "Position": "0",
+            "TabType": "flash",
+            "SceneGroup": [
+                {
+                    "id": "1",
+                    "top": "0",
+                    "left": "0"
+                }
+            ],
+            "ControlGroup": [
+                {
+                    "id": "1",
+                    "isSingle": "1",
+                    "scenegroup": "1"
+                },
+                {
+                    "id": "2",
+                    "isSingle": "1",
+                    "scenegroup": "1"
+                }
+            ],
+            "Control": [
+                {
+                    "ControlType": "label",
+                    "Label": {
+                        "lang_tag": "Enter_DALI_device_address",
+                        "text": "Enter DALI device address --->"
+                    },
+                    "Display": {
+                        "Top": 24,
+                        "Left": 20,
+                        "Width": 150,
+                        "Height": 20
+                    }
+                },
+                {
+                    "ControlType": "input",
+                    "ID": "ourAddress",
+                    "Display": {
+                        "Top": 20,
+                        "Left": 200,
+                        "Width": 150,
+                        "Height": 20
+                    }
+                },
+                {
+                    "ControlType": "label",
+                    "Label": {
+                        "text": "<a href='/port_3480/data_request?id=lr_al_dali_info' target='_blank'>Dali Planet status page</a>"
+                    },
+                    "Display": {
+                        "Top": 24,
+                        "Left": 460,
+                        "Width": 150,
+                        "Height": 20
+                    }
+                },
+                {
+                    "ControlType": "button",
+                    "Label": {
+                        "lang_tag": "Fade_Up_Down",
+                        "text": "Fade Up Down"
+                    },
+                    "Display": {
+                        "Top": 80,
+                        "Left": 20,
+                        "Width": 150,
+                        "Height": 20
+                    },
+                    "Command": {
+                        "Service": "urn:dali-org:serviceId:Dali1",
+                        "Action": "FadeUpDown",
+                        "Parameters": [
+                            {
+                                "Name": "addressFadeUpDown",
+                                "ID": "ourAddress"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "ControlType": "button",
+                    "Label": {
+                        "lang_tag": "Stop_Fading",
+                        "text": "Stop Fading"
+                    },
+                    "Display": {
+                        "Top": 80,
+                        "Left": 200,
+                        "Width": 150,
+                        "Height": 20
+                    },
+                    "Command": {
+                        "Service": "urn:dali-org:serviceId:Dali1",
+                        "Action": "StopFading",
+                        "Parameters": [
+                            {
+                                "Name": "addressStopFading",
+                                "ID": "ourAddress"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "ControlType": "button",
+                    "Label": {
+                        "lang_tag": "Step_Down_Off",
+                        "text": "Step Down Off"
+                    },
+                    "Display": {
+                        "Top": 110,
+                        "Left": 20,
+                        "Width": 150,
+                        "Height": 20
+                    },
+                    "Command": {
+                        "Service": "urn:dali-org:serviceId:Dali1",
+                        "Action": "DALIcommand",
+                        "Parameters": [
+                            {
+                                "Name": "command",
+                                "Value": "StepDownOff"
+                            },
+                            {
+                                "Name": "address",
+                                "ID": "ourAddress"
+                            },
+                            {
+                                "Name": "data",
+                                "Value": "0"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "ControlType": "button",
+                    "Label": {
+                        "lang_tag": "Step_Up_On",
+                        "text": "Step Up On"
+                    },
+                    "Display": {
+                        "Top": 110,
+                        "Left": 200,
+                        "Width": 150,
+                        "Height": 20
+                    },
+                    "Command": {
+                        "Service": "urn:dali-org:serviceId:Dali1",
+                        "Action": "DALIcommand",
+                        "Parameters": [
+                            {
+                                "Name": "command",
+                                "Value": "StepUpOn"
+                            },
+                            {
+                                "Name": "address",
+                                "ID": "ourAddress"
+                            },
+                            {
+                                "Name": "data",
+                                "Value": "0"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "ControlType": "button",
+                    "Label": {
+                        "lang_tag": "Recall_Min_Level",
+                        "text": "Recall Min Level"
+                    },
+                    "Display": {
+                        "Top": 140,
+                        "Left": 20,
+                        "Width": 150,
+                        "Height": 20
+                    },
+                    "Command": {
+                        "Service": "urn:dali-org:serviceId:Dali1",
+                        "Action": "DALIcommand",
+                        "Parameters": [
+                            {
+                                "Name": "command",
+                                "Value": "RecallMinLevel"
+                            },
+                            {
+                                "Name": "address",
+                                "ID": "ourAddress"
+                            },
+                            {
+                                "Name": "data",
+                                "Value": "0"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "ControlType": "button",
+                    "Label": {
+                        "lang_tag": "Recall_Max_Level",
+                        "text": "Recall Max Level"
+                    },
+                    "Display": {
+                        "Top": 140,
+                        "Left": 200,
+                        "Width": 150,
+                        "Height": 20
+                    },
+                    "Command": {
+                        "Service": "urn:dali-org:serviceId:Dali1",
+                        "Action": "DALIcommand",
+                        "Parameters": [
+                            {
+                                "Name": "command",
+                                "Value": "RecallMaxLevel"
+                            },
+                            {
+                                "Name": "address",
+                                "ID": "ourAddress"
+                            },
+                            {
+                                "Name": "data",
+                                "Value": "0"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "ControlType": "label",
+                    "Label": {
+                        "lang_tag": "Enter_DALI_scene_number",
+                        "text": "Enter DALI scene number --->"
+                    },
+                    "Display": {
+                        "Top": 204,
+                        "Left": 20,
+                        "Width": 150,
+                        "Height": 20
+                    }
+                },
+                {
+                    "ControlType": "input",
+                    "ID": "SceneNumber",
+                    "Display": {
+                        "Top": 200,
+                        "Left": 200,
+                        "Width": 150,
+                        "Height": 20
+                    }
+                },
+                {
+                    "ControlType": "button",
+                    "Label": {
+                        "lang_tag": "Go_To_Scene",
+                        "text": "Go To Scene"
+                    },
+                    "Display": {
+                        "Top": 230,
+                        "Left": 200,
+                        "Width": 150,
+                        "Height": 20
+                    },
+                    "Command": {
+                        "Service": "urn:dali-org:serviceId:Dali1",
+                        "Action": "RunScene",
+                        "Parameters": [
+                            {
+                                "Name": "sceneAddress",
+                                "ID": "ourAddress"
+                            },
+                            {
+                                "Name": "sceneNumber",
+                                "ID": "SceneNumber"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "ControlType": "label",
+                    "Label": {
+                        "lang_tag": "Value_1",
+                        "text": "Value 1:"
+                    },
+                    "Display": {
+                        "Top": 84,
+                        "Left": 460,
+                        "Width": 150,
+                        "Height": 20
+                    }
+                },
+                {
+                    "ControlType": "input",
+                    "ID": "Value1",
+                    "Display": {
+                        "Top": 100,
+                        "Left": 460,
+                        "Width": 150,
+                        "Height": 20
+                    }
+                },
+                {
+                    "ControlType": "label",
+                    "Label": {
+                        "lang_tag": "Value_2",
+                        "text": "Value 2:"
+                    },
+                    "Display": {
+                        "Top": 129,
+                        "Left": 460,
+                        "Width": 150,
+                        "Height": 20
+                    }
+                },
+                {
+                    "ControlType": "input",
+                    "ID": "Value2",
+                    "Display": {
+                        "Top": 145,
+                        "Left": 460,
+                        "Width": 150,
+                        "Height": 20
+                    }
+                },
+                {
+                    "ControlType": "label",
+                    "Label": {
+                        "lang_tag": "Value_3",
+                        "text": "Value 3:"
+                    },
+                    "Display": {
+                        "Top": 174,
+                        "Left": 460,
+                        "Width": 150,
+                        "Height": 20
+                    }
+                },
+                {
+                    "ControlType": "input",
+                    "ID": "Value3",
+                    "Display": {
+                        "Top": 190,
+                        "Left": 460,
+                        "Width": 150,
+                        "Height": 20
+                    }
+                },
+                {
+                    "ControlType": "button",
+                    "Label": {
+                        "lang_tag": "Run_Test",
+                        "text": "Run Test"
+                    },
+                    "Display": {
+                        "Top": 230,
+                        "Left": 460,
+                        "Width": 150,
+                        "Height": 20
+                    },
+                    "Command": {
+                        "Service": "urn:dali-org:serviceId:Dali1",
+                        "Action": "RunTest",
+                        "Parameters": [
+                            {
+                                "Name": "value1",
+                                "Value": "doTest",
+                                "ID": "Value1"
+                            },
+                            {
+                                "Name": "value2",
+                                "Value": "0",
+                                "ID": "Value2"
+                            },
+                            {
+                                "Name": "value3",
+                                "Value": "0",
+                                "ID": "Value3"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "Label": {
+                "lang_tag": "Sync_Hardware",
+                "text": "Sync Hardware"
+            },
+            "Position": "1",
+            "TabType": "flash",
+            "Control": [
+                {
+                    "ControlType": "label",
+                    "Label": {
+                        "lang_tag": "Assign_short_addresses",
+                        "text": "Assign short addresses --->"
+                    },
+                    "Display": {
+                        "Top": 24,
+                        "Left": 85,
+                        "Width": 150,
+                        "Height": 20
+                    }
+                },
+                {
+                    "ControlType": "button",
+                    "Label": {
+                        "lang_tag": "Set_Addresses",
+                        "text": "Set Addresses"
+                    },
+                    "Display": {
+                        "Top": 20,
+                        "Left": 240,
+                        "Width": 150,
+                        "Height": 20
+                    },
+                    "Command": {
+                        "Service": "urn:dali-org:serviceId:Dali1",
+                        "Action": "SetShortAddresses"
+                    }
+                },
+                {
+                    "ControlType": "label",
+                    "Label": {
+                        "lang_tag": "Enter_old_address",
+                        "text": "Enter old address --->"
+                    },
+                    "Display": {
+                        "Top": 69,
+                        "Left": 85,
+                        "Width": 150,
+                        "Height": 20
+                    }
+                },
+                {
+                    "ControlType": "input",
+                    "ID": "OldAddress",
+                    "Display": {
+                        "Top": 65,
+                        "Left": 240,
+                        "Width": 150,
+                        "Height": 20
+                    }
+                },
+                {
+                    "ControlType": "label",
+                    "Label": {
+                        "lang_tag": "Enter_new_address",
+                        "text": "Enter new address --->"
+                    },
+                    "Display": {
+                        "Top": 99,
+                        "Left": 85,
+                        "Width": 150,
+                        "Height": 20
+                    }
+                },
+                {
+                    "ControlType": "input",
+                    "ID": "NewAddress",
+                    "Display": {
+                        "Top": 95,
+                        "Left": 240,
+                        "Width": 150,
+                        "Height": 20
+                    }
+                },
+                {
+                    "ControlType": "button",
+                    "Label": {
+                        "lang_tag": "Change_DALI_Address",
+                        "text": "Change Short Address"
+                    },
+                    "Display": {
+                        "Top": 125,
+                        "Left": 240,
+                        "Width": 150,
+                        "Height": 20
+                    },
+                    "Command": {
+                        "Service": "urn:dali-org:serviceId:Dali1",
+                        "Action": "ChangeShortAddress",
+                        "Parameters": [
+                            {
+                                "Name": "oldAddress",
+                                "ID": "OldAddress"
+                            },
+                            {
+                                "Name": "newAddress",
+                                "ID": "NewAddress"
+                            }
+                        ]
+                    }
+				},
+                {
+                    "ControlType": "label",
+                    "Label": {
+                        "lang_tag": "Read_fade_values_from_hardware",
+                        "text": "Read fade values from hardware --->"
+                    },
+                    "Display": {
+                        "Top": 184,
+                        "Left": 20,
+                        "Width": 150,
+                        "Height": 20
+                    }
+                },
+                {
+                    "ControlType": "button",
+                    "Label": {
+                        "lang_tag": "Get_Fade_Values",
+                        "text": "Get Fade Values"
+                    },
+                    "Display": {
+                        "Top": 180,
+                        "Left": 240,
+                        "Width": 150,
+                        "Height": 20
+                    },
+                    "Command": {
+                        "Service": "urn:dali-org:serviceId:Dali1",
+                        "Action": "GetFadeValues"
+                    }
+                },
+                {
+                    "ControlType": "label",
+                    "Label": {
+                        "lang_tag": "Write_fade_values_to_hardware",
+                        "text": "Write fade values to hardware --->"
+                    },
+                    "Display": {
+                        "Top": 214,
+                        "Left": 20,
+                        "Width": 150,
+                        "Height": 20
+                    }
+                },
+                {
+                    "ControlType": "button",
+                    "Label": {
+                        "lang_tag": "Set_Fade_Values",
+                        "text": "Set Fade Values"
+                    },
+                    "Display": {
+                        "Top": 210,
+                        "Left": 240,
+                        "Width": 150,
+                        "Height": 20
+                    },
+                    "Command": {
+                        "Service": "urn:dali-org:serviceId:Dali1",
+                        "Action": "SetFadeValues"
+                    }
+                },
+                {
+                    "ControlType": "label",
+                    "Label": {
+                        "lang_tag": "Read_power_on_levels_from_hardware",
+                        "text": "Read power on levels from hardware --->"
+                    },
+                    "Display": {
+                        "Top": 274,
+                        "Left": 20,
+                        "Width": 150,
+                        "Height": 20
+                    }
+                },
+                {
+                    "ControlType": "button",
+                    "Label": {
+                        "lang_tag": "Get_Levels",
+                        "text": "Get Levels"
+                    },
+                    "Display": {
+                        "Top": 270,
+                        "Left": 240,
+                        "Width": 150,
+                        "Height": 20
+                    },
+                    "Command": {
+                        "Service": "urn:dali-org:serviceId:Dali1",
+                        "Action": "GetPowerOnLevels"
+                    }
+                },
+                {
+                    "ControlType": "label",
+                    "Label": {
+                        "lang_tag": "Write_power_on_levels_to_hardware",
+                        "text": "Write power on levels to hardware --->"
+                    },
+                    "Display": {
+                        "Top": 304,
+                        "Left": 20,
+                        "Width": 150,
+                        "Height": 20
+                    }
+                },
+                {
+                    "ControlType": "button",
+                    "Label": {
+                        "lang_tag": "Set_Levels",
+                        "text": "Set Levels"
+                    },
+                    "Display": {
+                        "Top": 300,
+                        "Left": 240,
+                        "Width": 150,
+                        "Height": 20
+                    },
+                    "Command": {
+                        "Service": "urn:dali-org:serviceId:Dali1",
+                        "Action": "SetPowerOnLevels"
+                    }
+                }
+			]
+        },
+        {
+            "Label": {
+                "lang_tag": "Groups_and_Scenes",
+                "text": "Groups and Scenes"
+            },
+            "Position": "1",
+            "TabType": "flash",
+            "Control": [
+                {
+                    "ControlType": "label",
+                    "Label": {
+                        "lang_tag": "Read_groups_from_hardware",
+                        "text": "Read groups from hardware --->"
+                    },
+                    "Display": {
+                        "Top": 24,
+                        "Left": 20,
+                        "Width": 150,
+                        "Height": 20
+                    }
+                },
+                {
+                    "ControlType": "button",
+                    "Label": {
+                        "lang_tag": "Get_Groups",
+                        "text": "Get Groups"
+                    },
+                    "Display": {
+                        "Top": 20,
+                        "Left": 200,
+                        "Width": 150,
+                        "Height": 20
+                    },
+                    "Command": {
+                        "Service": "urn:dali-org:serviceId:Dali1",
+                        "Action": "GetGroups"
+                    }
+                },
+                {
+                    "ControlType": "label",
+                    "Label": {
+                        "lang_tag": "Write_groups_to_hardware",
+                        "text": "Write groups to hardware --->"
+                    },
+                    "Display": {
+                        "Top": 54,
+                        "Left": 20,
+                        "Width": 150,
+                        "Height": 20
+                    }
+                },
+                {
+                    "ControlType": "button",
+                    "Label": {
+                        "lang_tag": "Set_Groups",
+                        "text": "Set Groups"
+                    },
+                    "Display": {
+                        "Top": 50,
+                        "Left": 200,
+                        "Width": 150,
+                        "Height": 20
+                    },
+                    "Command": {
+                        "Service": "urn:dali-org:serviceId:Dali1",
+                        "Action": "SetGroups"
+                    }
+                },
+                {
+                    "ControlType": "label",
+                    "Label": {
+                        "lang_tag": "Read_scenes_from_hardware",
+                        "text": "Read scenes from hardware --->"
+                    },
+                    "Display": {
+                        "Top": 114,
+                        "Left": 20,
+                        "Width": 150,
+                        "Height": 20
+                    }
+                },
+                {
+                    "ControlType": "button",
+                    "Label": {
+                        "lang_tag": "Get_Scenes",
+                        "text": "Get Scenes"
+                    },
+                    "Display": {
+                        "Top": 110,
+                        "Left": 200,
+                        "Width": 150,
+                        "Height": 20
+                    },
+                    "Command": {
+                        "Service": "urn:dali-org:serviceId:Dali1",
+                        "Action": "GetScenes"
+                    }
+                },
+                {
+                    "ControlType": "label",
+                    "Label": {
+                        "lang_tag": "Write_scenes_to_hardware",
+                        "text": "Write scenes to hardware --->"
+                    },
+                    "Display": {
+                        "Top": 144,
+                        "Left": 20,
+                        "Width": 150,
+                        "Height": 20
+                    }
+                },
+                {
+                    "ControlType": "button",
+                    "Label": {
+                        "lang_tag": "Set_Scenes",
+                        "text": "Set Scenes"
+                    },
+                    "Display": {
+                        "Top": 140,
+                        "Left": 200,
+                        "Width": 150,
+                        "Height": 20
+                    },
+                    "Command": {
+                        "Service": "urn:dali-org:serviceId:Dali1",
+                        "Action": "SetScenes"
+                    }
+                }
+			]
+        },
+        {
+            "Label": {
+                "lang_tag": "advanced",
+                "text": "Advanced"
+            },
+            "Position": "2",
+            "TabType": "javascript",
+            "ScriptName": "shared.js",
+            "Function": "advanced_device"
+        }
+    ],
+    "DeviceType": "urn:schemas-dali-org:device:DaliPlanet:1"
+}

@@ -1,0 +1,133 @@
+<?xml version="1.0"?>
+<implementation>
+    <specVersion>
+        <major>1</major>
+        <minor>0</minor>
+    </specVersion>
+    <files>L_DaliPlanet1.lua</files>
+    <settings>
+        <protocol>raw</protocol>
+    </settings>
+
+    <startup>luaStartUp</startup>
+
+    <actionList>
+        <action>
+        <serviceId>urn:upnp-org:serviceId:Dimming1</serviceId>
+        <name>SetLoadLevelTarget</name>
+        <run>arcSetTarget(lul_device, lul_settings.newLoadlevelTarget)</run>
+        </action>
+
+        <action>
+        <serviceId>urn:upnp-org:serviceId:Dimming1</serviceId>
+        <name>LoadLevelStatus</name>
+        <run>arcLoadLevelStatus(lul_device)</run>
+        </action>
+
+        <action>
+        <serviceId>urn:dali-org:serviceId:Dali1</serviceId>
+        <name>TransferViaDTR</name>
+        <run>transferViaDTR(lul_settings.transferValue, lul_settings.toAddress, lul_settings.saveDTRas, lul_settings.sceneNumber)</run>
+        </action>
+
+        <action>
+        <serviceId>urn:dali-org:serviceId:Dali1</serviceId>
+        <name>FadeUpDown</name>
+        <run>fadeUpDown(lul_settings.addressFadeUpDown)</run>
+        </action>
+
+        <action>
+        <serviceId>urn:dali-org:serviceId:Dali1</serviceId>
+        <name>StopFading</name>
+        <run>stopFading(lul_settings.addressStopFading)</run>
+        </action>
+
+        <action>
+        <serviceId>urn:dali-org:serviceId:Dali1</serviceId>
+        <name>DALIcommand</name>
+        <run>DALIcommand(lul_settings.command, lul_settings.address, lul_settings.data)</run>
+        </action>
+
+        <action>
+        <serviceId>urn:dali-org:serviceId:Dali1</serviceId>
+        <name>RunTest</name>
+        <run>runTest(lul_settings.value1, lul_settings.value2, lul_settings.value3)</run>
+        </action>
+
+        <action>
+        <serviceId>urn:dali-org:serviceId:Dali1</serviceId>
+        <name>SetShortAddresses</name>
+        <!-- this can take up to 15 minutes to execute: run it as a job -->
+        <job>setShortAddresses()</job>
+        </action>
+
+        <action>
+        <serviceId>urn:dali-org:serviceId:Dali1</serviceId>
+        <name>ChangeShortAddress</name>
+        <run>changeShortAddress(lul_settings.oldAddress, lul_settings.newAddress)</run>
+        </action>
+
+        <action>
+        <serviceId>urn:dali-org:serviceId:Dali1</serviceId>
+        <name>GetFadeValues</name>
+        <!-- this can take some time to execute: run it as a job -->
+        <job>getFadeValues()</job>
+        </action>
+
+        <action>
+        <serviceId>urn:dali-org:serviceId:Dali1</serviceId>
+        <name>SetFadeValues</name>
+        <!-- this can take some time to execute: run it as a job -->
+        <job>setFadeValues()</job>
+        </action>
+
+        <action>
+        <serviceId>urn:dali-org:serviceId:Dali1</serviceId>
+        <name>GetPowerOnLevels</name>
+        <!-- this can take some time to execute: run it as a job -->
+        <job>getPowerOnLevels()</job>
+        </action>
+
+        <action>
+        <serviceId>urn:dali-org:serviceId:Dali1</serviceId>
+        <name>SetPowerOnLevels</name>
+        <!-- this can take some time to execute: run it as a job -->
+        <job>setPowerOnLevels()</job>
+        </action>
+
+        <action>
+        <serviceId>urn:dali-org:serviceId:Dali1</serviceId>
+        <name>GetGroups</name>
+        <!-- this can take some time to execute: run it as a job -->
+        <job>getGroups()</job>
+        </action>
+
+        <action>
+        <serviceId>urn:dali-org:serviceId:Dali1</serviceId>
+        <name>SetGroups</name>
+        <!-- this can take some time to execute: run it as a job -->
+        <job>setGroups()</job>
+        </action>
+
+        <action>
+        <serviceId>urn:dali-org:serviceId:Dali1</serviceId>
+        <name>GetScenes</name>
+        <!-- this can take some time to execute: run it as a job -->
+        <job>getScenes()</job>
+        </action>
+
+        <action>
+        <serviceId>urn:dali-org:serviceId:Dali1</serviceId>
+        <name>SetScenes</name>
+        <!-- this can take some time to execute: run it as a job -->
+        <job>setScenes()</job>
+        </action>
+
+        <action>
+        <serviceId>urn:dali-org:serviceId:Dali1</serviceId>
+        <name>RunScene</name>
+        <run>runScene(lul_settings.sceneAddress, lul_settings.sceneNumber)</run>
+        </action>
+
+    </actionList>
+</implementation>

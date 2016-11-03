@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root xmlns="urn:schemas-upnp-org:device-1-0">
+    <specVersion>
+      <major>1</major>
+      <minor>0</minor>
+    </specVersion>
+
+    <device>
+        <deviceType>urn:schemas-dali-org:device:DaliPlanet:1</deviceType>
+        <friendlyName>DALI Planet</friendlyName>
+        <staticJson>D_DaliPlanet1.json</staticJson>
+        <modelDescription>DALI serial interface</modelDescription>
+        <modelName>Generic serial</modelName>
+        <modelNumber>1.0</modelNumber>
+        <Category_Num>11</Category_Num>
+        <handleChildren>1</handleChildren>
+
+        <serviceList>
+            <service>
+                <serviceType>urn:schemas-upnp-org:service:Dimming:1</serviceType>
+                <serviceId>urn:upnp-org:serviceId:Dimming1</serviceId>
+                <SCPDURL>S_Dimming1.xml</SCPDURL>
+            </service>
+            <service>
+                <serviceType>urn:schemas-dali-org:service:Dali:1</serviceType>
+                <serviceId>urn:dali-org:serviceId:Dali1</serviceId>
+                <SCPDURL>S_DaliPlanet1.xml</SCPDURL>
+            </service>
+        </serviceList>
+
+        <implementationList>
+            <implementationFile>I_DaliPlanet1.xml</implementationFile>
+        </implementationList>
+
+    </device>
+</root>

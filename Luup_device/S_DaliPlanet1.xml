@@ -1,0 +1,273 @@
+<?xml version="1.0"?>
+<scpd xmlns="urn:schemas-upnp-org:service-1-0">
+    <specVersion>
+        <major>1</major>
+        <minor>0</minor>
+    </specVersion>
+
+    <serviceStateTable>
+        <stateVariable sendEvents="no">
+        <name>A_ARG_TYPE_TransferValue</name>
+        <shortCode>transferValue</shortCode>
+        <dataType>string</dataType>
+        </stateVariable>
+
+        <stateVariable sendEvents="no">
+        <name>A_ARG_TYPE_ToAddress</name>
+        <shortCode>transferToAddress</shortCode>
+        <dataType>string</dataType>
+        </stateVariable>
+
+        <stateVariable sendEvents="no">
+        <name>A_ARG_TYPE_SaveDTRas</name>
+        <shortCode>saveDTRas</shortCode>
+        <dataType>string</dataType>
+        </stateVariable>
+
+        <stateVariable sendEvents="no">
+        <name>A_ARG_TYPE_SceneNumber</name>
+        <shortCode>sceneNumber</shortCode>
+        <dataType>string</dataType>
+        </stateVariable>
+
+        <stateVariable sendEvents="no">
+        <name>A_ARG_TYPE_AddressStopFading</name>
+        <shortCode>addressStopFading</shortCode>
+        <dataType>string</dataType>
+        </stateVariable>
+
+        <stateVariable sendEvents="no">
+        <name>A_ARG_TYPE_AddressFadeUpDown</name>
+        <shortCode>addressFadeUpDown</shortCode>
+        <dataType>string</dataType>
+        </stateVariable>
+
+        <stateVariable sendEvents="no">
+        <name>A_ARG_TYPE_Command</name>
+        <shortCode>command</shortCode>
+        <dataType>string</dataType>
+        </stateVariable>
+
+        <stateVariable sendEvents="no">
+        <name>A_ARG_TYPE_Address</name>
+        <shortCode>address</shortCode>
+        <dataType>string</dataType>
+        </stateVariable>
+
+        <stateVariable sendEvents="no">
+        <name>A_ARG_TYPE_Data</name>
+        <shortCode>data</shortCode>
+        <dataType>string</dataType>
+        </stateVariable>
+
+        <stateVariable sendEvents="no">
+        <name>A_ARG_TYPE_Value1</name>
+        <shortCode>value1</shortCode>
+        <dataType>string</dataType>
+
+        </stateVariable>
+        <stateVariable sendEvents="no">
+        <name>A_ARG_TYPE_Value2</name>
+        <shortCode>value2</shortCode>
+        <dataType>string</dataType>
+        </stateVariable>
+
+        <stateVariable sendEvents="no">
+        <name>A_ARG_TYPE_Value3</name>
+        <shortCode>value3</shortCode>
+        <dataType>string</dataType>
+        </stateVariable>
+
+        <stateVariable sendEvents="no">
+        <name>A_ARG_TYPE_OldAddress</name>
+        <shortCode>oldAddress</shortCode>
+        <dataType>string</dataType>
+        </stateVariable>
+
+        <stateVariable sendEvents="no">
+        <name>A_ARG_TYPE_NewAddress</name>
+        <shortCode>newAddress</shortCode>
+        <dataType>string</dataType>
+        </stateVariable>
+
+        <stateVariable sendEvents="no">
+        <name>A_ARG_TYPE_SceneAddress</name>
+        <shortCode>sceneAddress</shortCode>
+        <dataType>string</dataType>
+        </stateVariable>
+
+        <stateVariable sendEvents="no">
+        <name>A_ARG_TYPE_SceneNumber2</name>
+        <shortCode>sceneNumber</shortCode>
+        <dataType>string</dataType>
+        </stateVariable>
+
+    </serviceStateTable>
+
+    <actionList>
+        <action>
+            <name>TransferViaDTR</name>
+            <argumentList>
+                <argument>
+                    <name>TransferValue</name>
+                    <direction>in</direction>
+                    <relatedStateVariable>A_ARG_TYPE_TransferValue</relatedStateVariable>
+                </argument>
+            </argumentList>
+            <argumentList>
+                <argument>
+                    <name>ToAddress</name>
+                    <direction>in</direction>
+                    <relatedStateVariable>A_ARG_TYPE_ToAddress</relatedStateVariable>
+                </argument>
+            </argumentList>
+            <argumentList>
+                <argument>
+                    <name>SaveDTRas</name>
+                    <direction>in</direction>
+                    <relatedStateVariable>A_ARG_TYPE_SaveDTRas</relatedStateVariable>
+                </argument>
+            </argumentList>
+            <argumentList>
+                <argument>
+                    <name>SceneNumber</name>
+                    <direction>in</direction>
+                    <relatedStateVariable>A_ARG_TYPE_SceneNumber</relatedStateVariable>
+                </argument>
+            </argumentList>
+        </action>
+
+        <action>
+            <name>FadeUpDown</name>
+            <argumentList>
+                <argument>
+                    <name>AddressFadeUpDown</name>
+                    <direction>in</direction>
+                    <relatedStateVariable>A_ARG_TYPE_AddressFadeUpDown</relatedStateVariable>
+                </argument>
+            </argumentList>
+        </action>
+
+        <action>
+            <name>StopFading</name>
+            <argumentList>
+                <argument>
+                    <name>AddressStopFading</name>
+                    <direction>in</direction>
+                    <relatedStateVariable>A_ARG_TYPE_AddressStopFading</relatedStateVariable>
+                </argument>
+            </argumentList>
+        </action>
+
+        <action>
+            <name>DALIcommand</name>
+            <argumentList>
+                <argument>
+                    <name>Command</name>
+                    <direction>in</direction>
+                    <relatedStateVariable>A_ARG_TYPE_Command</relatedStateVariable>
+                </argument>
+                <argument>
+                    <name>Address</name>
+                    <direction>in</direction>
+                    <relatedStateVariable>A_ARG_TYPE_Address</relatedStateVariable>
+                </argument>
+                <argument>
+                    <name>Data</name>
+                    <direction>in</direction>
+                    <relatedStateVariable>A_ARG_TYPE_Data</relatedStateVariable>
+                </argument>
+            </argumentList>
+        </action>
+
+        <action>
+            <name>RunTest</name>
+            <argumentList>
+                <argument>
+                    <name>Value1</name>
+                    <direction>in</direction>
+                    <relatedStateVariable>A_ARG_TYPE_Value1</relatedStateVariable>
+                </argument>
+                <argument>
+                    <name>Value2</name>
+                    <direction>in</direction>
+                    <relatedStateVariable>A_ARG_TYPE_Value2</relatedStateVariable>
+                </argument>
+                <argument>
+                    <name>Value3</name>
+                    <direction>in</direction>
+                    <relatedStateVariable>A_ARG_TYPE_Value3</relatedStateVariable>
+                </argument>
+            </argumentList>
+        </action>
+
+        <action>
+            <name>SetShortAddresses</name>
+        </action>
+
+        <action>
+            <name>ChangeShortAddress</name>
+            <argumentList>
+                <argument>
+                    <name>OldAddress</name>
+                    <direction>in</direction>
+                    <relatedStateVariable>A_ARG_TYPE_OldAddress</relatedStateVariable>
+                </argument>
+                <argument>
+                    <name>NewAddress</name>
+                    <direction>in</direction>
+                    <relatedStateVariable>A_ARG_TYPE_NewAddress</relatedStateVariable>
+                </argument>
+            </argumentList>
+        </action>
+
+        <action>
+            <name>GetFadeValues</name>
+        </action>
+
+        <action>
+            <name>SetFadeValues</name>
+        </action>
+
+        <action>
+            <name>GetPowerOnLevels</name>
+        </action>
+
+        <action>
+            <name>SetPowerOnLevels</name>
+        </action>
+
+        <action>
+            <name>SetGroups</name>
+        </action>
+
+        <action>
+            <name>GetGroups</name>
+        </action>
+
+        <action>
+            <name>GetScenes</name>
+        </action>
+
+        <action>
+            <name>SetScenes</name>
+        </action>
+
+        <action>
+            <name>RunScene</name>
+            <argumentList>
+                <argument>
+                    <name>SceneAddress</name>
+                    <direction>in</direction>
+                    <relatedStateVariable>A_ARG_TYPE_SceneAddress</relatedStateVariable>
+                </argument>
+                <argument>
+                    <name>SceneNumber</name>
+                    <direction>in</direction>
+                    <relatedStateVariable>A_ARG_TYPE_SceneNumber2</relatedStateVariable>
+                </argument>
+            </argumentList>
+        </action>
+
+    </actionList>
+</scpd>
