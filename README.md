@@ -2,5 +2,5 @@
 
 Control your DALI devices via Vera
 
-More informations here :
+More information here:
 - https://en.wikipedia.org/wiki/Digital_Addressable_Lighting_Interface
