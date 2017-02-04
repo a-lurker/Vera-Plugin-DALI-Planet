@@ -7,11 +7,11 @@
 
     This program is free software; you can redistribute it and/or
     modify it under the terms of the GNU General Public License
-    version 3 (GPLv3) as published by the Free Software Foundation; 
+    version 3 (GPLv3) as published by the Free Software Foundation;
 
     In addition to the GPLv3 License, this software is only for private
     or home useage. Commercial utilisation is not authorized.
-    
+
     The above copyright notice and this permission notice shall be included
     in all copies or substantial portions of the Software.
 
@@ -23,13 +23,13 @@
 
 local PLUGIN_NAME     = 'DaliPlanet'
 local PLUGIN_SID      = 'urn:dali-org:serviceId:Dali1'
-local PLUGIN_VERSION  = '0.53'
+local PLUGIN_VERSION  = '0.54'
 local THIS_LUL_DEVICE = nil
 local PLUGIN_URL_ID   = 'al_dali_info'
 local URL_ID          = './data_request?id=lr_'..PLUGIN_URL_ID
 
 local GATEWAY_TYPE    = 0
-local CL_DIDIO        = 1  -- Creative Lighting: 7 TX & 3 RX bytes 
+local CL_DIDIO        = 1  -- Creative Lighting: 7 TX & 3 RX bytes
 local TRIDONIC_SCI_1  = 2  -- RS232 PS/S (not default):  7 TX & 3 RX bytes - need to instruct hardware to use this mode
 local TRIDONIC_SCI_2  = 3  -- RS232 PS/S (default)    :  5 TX & 5 RX bytes IMPLEMENTED BUT NOT TESTED
 
@@ -38,7 +38,7 @@ local TRIDONIC_SCI_2  = 3  -- RS232 PS/S (default)    :  5 TX & 5 RX bytes IMPLE
     Lunatone DALI RS232 SCI - rebranded Tridonic - refer Lunatone Cockpit software
     Wago 750-641, DALI/DSI Master Module
     GE Lighting:  DALI Type 2, SKU: 65324
-    Embedded Systems DALI RS485 
+    Embedded Systems DALI RS485
     Starfield RT03
     DALCNET DGM01-1248
     Helvar Digidim 503 AV RS232
@@ -341,7 +341,7 @@ function ajaxRequest(url, args, callBack)
    if (window.XMLHttpRequest)
    {  // IE7, Mozilla, Safari, ...
       httpRequest = new XMLHttpRequest();
-   } 
+   }
    else if (window.ActiveXObject)
    {  // IE
       try { httpRequest = new ActiveXObject("Msxml2.XMLHTTP"); }
@@ -538,7 +538,7 @@ local function addressCmdsNotAllowed(cmdCode)
     return false
 end
 
--- A configuration command must be repeated within 100 ms, otherwise it is totally ignored. 
+-- A configuration command must be repeated within 100 ms, otherwise it is totally ignored.
 -- In all cases the slave will not reply with any data. These commands include 32 to 128,
 -- DALI_INIT (258) and DALI_RAND (259). ie reset/init/rand, DTR, fade and scene / group commands.
 -- Note: the application specific extension commands may also require the msg repeat?
@@ -705,7 +705,7 @@ local function buildCheckGatewayCommand()
     if (GATEWAY_TYPE == TRIDONIC_SCI_1) then
         return buildTXmsg(LINK_CHK, 0x00, 0x01)
     end
-    
+
     return buildTXmsg(LINK_CHK, 0x00, 0x00)
 end
 
@@ -813,7 +813,7 @@ local function rxMsgReport(rxMsgTable, cmdStr, cmdValue)
     table.insert(report, ' command with command parameter equal to ')
     table.insert(report, tostring(cmdValue))
     debug(table.concat(report))
-    
+
     if     (FIND_RESULT_BYTES == 0) then return rxMsgTable[1], rxMsgTable[2]
     elseif (FIND_RESULT_BYTES == 1) then return rxMsgTable[1], rxMsgTable[4]
     else return nil, nil end
@@ -933,7 +933,7 @@ end
 --------------------------------------------------------------------------------
 local DALI_COMMANDS = {
 
-    -- a command, which just checks the link to the DALI gateway 
+    -- a command, which just checks the link to the DALI gateway
     -- no DALI command is actually sent on the DALI bus
     ["CheckGateway"] = {
     description = "Check if the gateway is currently available.",
@@ -1772,7 +1772,7 @@ local function executeSingleDALIcommand(cmdStr, cmdValue, arcSceneGroupOffset)
     debug('') -- make a spacer
     debug('attempting command: \''..cmd.description..'\'')
 
-    -- the address commands (259 to 270) are not allowed during normal operation 
+    -- the address commands (259 to 270) are not allowed during normal operation
     if (addressCmdsNotAllowed(cmd.commandCode)) then
         return false, 'address commands are only allowed while assigning short addresses'
     end
@@ -1844,7 +1844,7 @@ local function executeSingleDALIcommand(cmdStr, cmdValue, arcSceneGroupOffset)
 
     -- some unknown reply
     return false, 'something not good happened'
-end    
+end
 
 -- This function returns two results and a 3rd if DALI_RX_ERROR is true:
 -- The first result is always the boolean OK flag.
@@ -1866,7 +1866,7 @@ local function executeDALIcommand(cmdStr, cmdValue, arcSceneGroupOffset)
     -- config commands MUST be repeated within 100 msec, otherwise they are ignored
     if (m_lastWasConfigCommand) then
        debug('REPEATING config command - this needs to be done for all config commands')
-       ok, result, daliRxError = executeSingleDALIcommand(cmdStr, cmdValue, arcSceneGroupOffset)    
+       ok, result, daliRxError = executeSingleDALIcommand(cmdStr, cmdValue, arcSceneGroupOffset)
        if (not ok) then
             if (result) then
                 debug('executeSingleDALIcommand() REPEAT failed: '..result,2)
@@ -1980,7 +1980,7 @@ local function setSearchAddress (searchAddress, lastH, lastM, lastL)
     if (lastH ~= addrH) then okH = executeDALIcommand('SearchHighAddress',   addrH) end
     if (lastM ~= addrM) then okM = executeDALIcommand('SearchMiddleAddress', addrM) end
     if (lastL ~= addrL) then okL = executeDALIcommand('SearchLowAddress',    addrL) end
-    
+
     if (not (okH and okM and okL)) then
         debug('setSearchAddress(): failed to set search registers')
         return false, lastH, lastM, lastL
@@ -1993,7 +1993,7 @@ end
 function searchForDevices()
     -- HACK2 test code: used to fake a search
     -- HACK2 local deviceRandomAddress = 8000001
-    
+
     local doneAllDevices = true
     local ok             = false
     local high           = 16777215  -- 2^24-1
@@ -2024,7 +2024,7 @@ function searchForDevices()
 
              -- if (deviceRandomAddress <= searchAddress) the answer is 'Yes' from potentially multiple devices
             -- At this point DALI_RX_ERROR may be set due to collisions amongst the replying devices
-            -- if (deviceRandomAddress > searchAddress) the answer is 'No' 
+            -- if (deviceRandomAddress > searchAddress) the answer is 'No'
             -- Keep dividing the searchAddress till 24 tests have been performed
             if (okCompare) then
                 debug('only one device is replying or none are replying',50)
@@ -2221,7 +2221,7 @@ local function getDeviceInfo(lcParameters)
         for i = 0, 15 do
             local ok, sceneLevel = executeDALIcommand('QuerySceneLevel', DALIaddress, i)
             if (ok and sceneLevel) then table.insert(deviceStatusTab, string.format('%-24s', 'scene level '..tostring(i))..tostring(sceneLevel)) end
-        end                                
+        end
 
         table.insert(deviceStatusTab, '\ncurrent fade time       '..fadeTimeStr)
         table.insert(deviceStatusTab, 'current fade rate       '..fadeRateStr..'\n')
@@ -2265,7 +2265,7 @@ function getGroups()
                     groupInfoList[group] = groupInfoList[group]..','.. DALIaddress
                 end
             end
-        end                                
+        end
     end
 
     -- create/update the Vera variable for storing all the different addresses used by each group
@@ -2300,7 +2300,7 @@ function getScenes()
         for DALIaddress in addressList:gmatch('%d+') do
             local ok, sceneLevel = executeDALIcommand('QuerySceneLevel', DALIaddress, scene)
             if (ok and sceneLevel and (sceneLevel ~= DALI_MASK)) then table.insert(sceneInfo, DALIaddress..'.'..tostring(sceneLevel)) end
-        end                                
+        end
 
         -- create/update the Vera variable for storing all the found scene levels at the different addresses for each scene
         local sceneInfoList = table.concat(sceneInfo, ',')
@@ -2413,7 +2413,7 @@ function setScenes()
     end
 
     -- Three possibilities per scene:
-    -- 1) remove device from scene. 2) change an existing device level. 3) add new device at a new level. 
+    -- 1) remove device from scene. 2) change an existing device level. 3) add new device at a new level.
     -- get all the devices and their levels for each scene by
     -- parsing the scene info into an address/level array
     -- example format: address.level: 'Scene4: 4.254,6.254,63.254' or 'Empty'
@@ -2626,7 +2626,7 @@ function arcLoadLevelStatus(lul_device)
 
     if (not ok) then debug('arcLoadLevelStatus() failed') return false end
 
-    local actualLevel = theLevel 
+    local actualLevel = theLevel
     if (theLevel == nil) then
         debug('arcLoadLevelStatus(): device at address '..tostring(DALIaddress)..' is probably not powered on',50)
         actualLevel = 0
@@ -2942,7 +2942,7 @@ function getFadeValues()
 
     for light in daliLights() do
         local DALIaddress = getDALIaddress(light)
-        local ok1, current = executeDALIcommand('QueryFadeTimeRate', DALIaddress)    
+        local ok1, current = executeDALIcommand('QueryFadeTimeRate', DALIaddress)
 
         if (ok1 and (current ~= nil)) then
             updateVariable('FadeTime', tostring(current.fadeTime), PLUGIN_SID, light)
@@ -2996,7 +2996,7 @@ function getPowerOnLevels()
 
     for light in daliLights() do
         local DALIaddress = getDALIaddress(light)
-        local ok1, currentPowerOn = executeDALIcommand('QueryPowerOnLevel', DALIaddress)    
+        local ok1, currentPowerOn = executeDALIcommand('QueryPowerOnLevel', DALIaddress)
 
         if (ok1 and (currentPowerOn ~= nil)) then
             updateVariable('PowerOnLevel', tostring(currentPowerOn), PLUGIN_SID, light)
@@ -3099,7 +3099,7 @@ function requestMain (lul_request, lul_parameters, lul_outputformat)
 
     -- set the parameters key and value to lower case
     local lcParameters = {}
-    for k, v in pairs(lul_parameters) do lcParameters[k:lower()] = v:lower() end 
+    for k, v in pairs(lul_parameters) do lcParameters[k:lower()] = v:lower() end
 
     -- output the intro page?
     if not lcParameters.fnc then
@@ -3115,7 +3115,7 @@ function requestMain (lul_request, lul_parameters, lul_outputformat)
 end
 
 -- start up the plugin
--- Refer to: I_DaliPlanetPSS1.xml 
+-- Refer to: I_DaliPlanetPSS1.xml
 -- <startup>luaStartUp</startup>
 -- Function must be global
 function luaStartUp(lul_device)
@@ -3261,6 +3261,10 @@ function luaStartUp(lul_device)
         debug(unpoweredLightsStr,50)
         m_TaskHandle = luup.task(unpoweredLightsStr, TASK_ERROR, PLUGIN_NAME, m_TaskHandle)
     end
+
+    -- required for UI7. UI5 uses true or false for the passed parameter.
+    -- UI7 uses 0 or 1 or 2 for the parameter. This works for both UI5 and UI7
+    luup.set_failure(false)
 
     return true, 'All OK', PLUGIN_NAME
 end
