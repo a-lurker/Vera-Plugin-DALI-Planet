@@ -13,15 +13,15 @@
 
     <actionList>
         <action>
-        <serviceId>urn:upnp-org:serviceId:Dimming1</serviceId>
-        <name>SetLoadLevelTarget</name>
-        <run>arcSetTarget(lul_device, lul_settings.newLoadlevelTarget)</run>
+        <serviceId>urn:upnp-org:serviceId:SwitchPower1</serviceId>
+        <name>SetTarget</name>
+        <run>setTarget(lul_device, lul_settings.newTargetValue)</run>
         </action>
 
         <action>
         <serviceId>urn:upnp-org:serviceId:Dimming1</serviceId>
-        <name>LoadLevelStatus</name>
-        <run>arcLoadLevelStatus(lul_device)</run>
+        <name>SetLoadLevelTarget</name>
+        <run>setLoadLevelTarget(lul_device, lul_settings.newLoadlevelTarget)</run>
         </action>
 
         <action>
@@ -45,7 +45,7 @@
         <action>
         <serviceId>urn:dali-org:serviceId:Dali1</serviceId>
         <name>DALIcommand</name>
-        <run>DALIcommand(lul_settings.command, lul_settings.address, lul_settings.data)</run>
+        <run>DALIcommand(lul_settings.command, lul_settings.value1, lul_settings.value2)</run>
         </action>
 
         <action>

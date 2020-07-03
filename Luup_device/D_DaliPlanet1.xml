@@ -17,11 +17,6 @@
 
         <serviceList>
             <service>
-                <serviceType>urn:schemas-upnp-org:service:Dimming:1</serviceType>
-                <serviceId>urn:upnp-org:serviceId:Dimming1</serviceId>
-                <SCPDURL>S_Dimming1.xml</SCPDURL>
-            </service>
-            <service>
                 <serviceType>urn:schemas-dali-org:service:Dali:1</serviceType>
                 <serviceId>urn:dali-org:serviceId:Dali1</serviceId>
                 <SCPDURL>S_DaliPlanet1.xml</SCPDURL>

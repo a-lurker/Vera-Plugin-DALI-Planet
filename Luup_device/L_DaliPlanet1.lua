@@ -1,5 +1,5 @@
 --[[
-    Originated by zoot1612, modified and updated by a-lurker, 29 Jan 2015
+    Originated by zoot1612, modified and updated by a-lurker, 29 Jan 2015; last update May 2019
     http://forum.micasaverde.com/index.php/topic,9677.msg201758.html#msg201758
 
     Suits the Creative Lighting DALI DidIO and Tridonic gateways.
@@ -23,7 +23,7 @@
 
 local PLUGIN_NAME     = 'DaliPlanet'
 local PLUGIN_SID      = 'urn:dali-org:serviceId:Dali1'
-local PLUGIN_VERSION  = '0.54'
+local PLUGIN_VERSION  = '0.55'
 local THIS_LUL_DEVICE = nil
 local PLUGIN_URL_ID   = 'al_dali_info'
 local URL_ID          = './data_request?id=lr_'..PLUGIN_URL_ID
@@ -46,12 +46,23 @@ local TRIDONIC_SCI_2  = 3  -- RS232 PS/S (default)    :  5 TX & 5 RX bytes IMPLE
 
 --------------------------------------------------------------------------------
 -- setup global variables
-local THIS_LUL_DEVICE = nil
+local THIS_LUL_DEVICE     = nil
 local DIMMABLE_LIGHT_DEV  = 'urn:schemas-upnp-org:device:DimmableLight:1'
+local SWP_SID             = 'urn:upnp-org:serviceId:SwitchPower1'
+local SWD_SID             = 'urn:upnp-org:serviceId:Dimming1'
 local ENERGY_METERING_SID = 'urn:micasaverde-com:serviceId:EnergyMetering1'
 
-local m_busy = false
-local m_lastWasConfigCommand = false
+local m_LightCount      = 0
+local m_GroupCount      = 0
+local m_UnpoweredCount  = 0
+local m_UnpoweredLights = {}
+
+local TWENTY_MINUTES      = 1200  -- in second intervals
+local m_HeartBeatInterval = TWENTY_MINUTES
+local m_HeartBeatEnable   = ''    -- is set to either: '0' or '1'
+
+local m_Busy = false
+local m_LastWasConfigCommand = false
 local m_TimingInitPeriod = false
 
 -- when first powered on, most new lights light up. So fade down first for instant gratification
@@ -75,7 +86,7 @@ Number of Scenes per Group: 16
 Short address  - a 6 bit number
 Random Address - a 24 bit value that is mainly used for
 sorting out short address conflicts when commissioning.
-You can also address devices as a groups.
+You can also address devices as a group.
 
 DTR = Data Transfer Register. A value is broadcast to all devices, which is then retained in
 the DTR of the device. A subsequent command can then direct that the DTR be transferred, into
@@ -241,6 +252,7 @@ local DALI_RX_ERROR       = 0x00
 local FIND_RESULT_BYTES   = 0
 --------------------------------------------------------------------------------
 
+-- don't change this, it won't do anything. Use the DebugEnabled flag instead
 local DEBUG_MODE = false
 
 local function debug(textParm, logLevel)
@@ -261,19 +273,22 @@ local function debug(textParm, logLevel)
     end
 end
 
--- If non existent, create the variable.
--- Update the variable only if needs to be.
+-- If non existent, create the variable
+-- Update the variable only if needs to be
 local function updateVariable(varK, varV, sid, id)
     if (sid == nil) then sid = PLUGIN_SID      end
     if (id  == nil) then  id = THIS_LUL_DEVICE end
 
-    if ((varK == nil) or (varV == nil)) then
-        luup.log(PLUGIN_NAME..' debug: '..'Error: updateVariable was supplied with a nil value', 1)
+    if (varV == nil) then
+	    if (varK == nil) then
+            luup.log(PLUGIN_NAME..' debug: '..'Error: updateVariable was supplied with nil values', 1)
+		else
+            luup.log(PLUGIN_NAME..' debug: '..'Error: updateVariable '..tostring(varK)..' was supplied with a nil value', 1)
+		end
         return
     end
 
     local newValue = tostring(varV)
-    --debug(varK..' = '..newValue)
     debug(newValue..' --> '..varK)
 
     local currentValue = luup.variable_get(sid, varK, id)
@@ -294,6 +309,24 @@ local function escJSONentities(s)
     return s
 end
 
+local function escHTMLentities(s)
+    s = s:gsub('&', '&amp;')
+    s = s:gsub('<', '&lt;')
+    s = s:gsub('>', '&gt;')
+    s = s:gsub('"', '&quot;')
+    s = s:gsub("'", '&#039;')
+    return s
+end
+
+local function escHTMLentities2(s)
+    s = s:gsub('&', '&#x26;')
+    s = s:gsub('<', '&#x3c;')
+    s = s:gsub('>', '&#x3e;')
+    s = s:gsub('"', '&#x22;')
+    s = s:gsub("'", '&#x27;')
+    return s
+end
+
 local function htmlHeader()
 return [[<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -303,8 +336,7 @@ return [[<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 end
 
 local function htmlJavaScript()
-return [[
-<script type="text/javascript">
+    local javaScript = [[
 
 var submitting = false;
 
@@ -406,7 +438,7 @@ function submitClicked()
    // stop the form from being resubmitted, if the user gets a bit clicky, until we get a server response
    if (submitting) return false;
 
-   // validate the the DALI address
+   // validate the DALI address
    var daliAddress = parseInt(document.getElementById("daliAddressID").value,10);
    if (isNaN(daliAddress) || (daliAddress < 0) || (daliAddress > 63))
       daliAddress = 'error';
@@ -437,7 +469,10 @@ function startUp() {
 // execute this
 window.onload = startUp;
 
-</script>]]
+]]
+   --return '<script type="text/javascript">'..escHTMLentities(javaScript)..'</script>'
+   --return '<script type="text/javascript">'..escHTMLentities2(javaScript)..'</script>'
+   return '<script type="text/javascript">'..javaScript..'</script>'
 end
 
 -- used to display message debug strings
@@ -495,7 +530,7 @@ local function getStatusFlags(byte8)
 1  lamp failure:               0 = OK
 0  ballast status:             0 = OK
 ]]
-    stFlgs = {
+    local stFlgs = {
     powerFailure     = getBitMap(byte8,7),
     missingShortAddr = getBitMap(byte8,6),
     resetState       = getBitMap(byte8,5),
@@ -1794,8 +1829,8 @@ local function executeSingleDALIcommand(cmdStr, cmdValue, arcSceneGroupOffset)
     -- build all of the command codes for the scenes and groups as needed
     makeSceneGroupCommandAsNeeded(cmd, arcSceneGroupOffset)
 
-    m_lastWasConfigCommand = isConfigCommand(cmd.commandCode)
-    if (m_lastWasConfigCommand) then
+    m_LastWasConfigCommand = isConfigCommand(cmd.commandCode)
+    if (m_LastWasConfigCommand) then
         debug ('starting DALI CONFIGURATION command: '..cmdStr)
     else
         debug('starting DALI command: '..cmdStr)
@@ -1864,7 +1899,7 @@ local function executeDALIcommand(cmdStr, cmdValue, arcSceneGroupOffset)
     end
 
     -- config commands MUST be repeated within 100 msec, otherwise they are ignored
-    if (m_lastWasConfigCommand) then
+    if (m_LastWasConfigCommand) then
        debug('REPEATING config command - this needs to be done for all config commands')
        ok, result, daliRxError = executeSingleDALIcommand(cmdStr, cmdValue, arcSceneGroupOffset)
        if (not ok) then
@@ -1907,16 +1942,31 @@ local function setPowerConsumption(Watts)
     local currentValue = nil
 
     for light in daliLights() do
-        currentValue = luup.variable_get(PLUGIN_SID, 'UserSuppliedWattage', light)
+        currentValue = luup.variable_get(ENERGY_METERING_SID, 'UserSuppliedWattage', light)
         if (currentValue == nil) then
+		    -- Create the UserSuppliedWattage variable:
+			-- This var is used as the source value when the light's power consumption
+			-- calculations are in action. The result is written to the Watts variable.
             luup.variable_set(ENERGY_METERING_SID, 'UserSuppliedWattage', tostring(Watts), light)
         end
-
-        currentValue = luup.variable_get(PLUGIN_SID, 'Watts', light)
-        if (currentValue == nil) then
-            luup.variable_set(ENERGY_METERING_SID, 'Watts', '0', light)
-        end
     end
+end
+
+local function updateDeviceStatus(targetValue, updateWatts, lul_device)
+	local onOff = '1'
+    targetValue = tonumber(targetValue)
+    if (targetValue == 0) then onOff = '0' end
+
+    updateVariable('Status', onOff, SWP_SID, lul_device)
+    updateVariable('LoadLevelTarget', tostring(targetValue), SWD_SID, lul_device) -- needed for AltUI
+    updateVariable('LoadLevelStatus', tostring(targetValue), SWD_SID, lul_device)
+
+    -- only needs to be done for single lights, not for groups
+    if (updateWatts) then
+        -- use the dimmer setting and UserSuppliedWattage to calculate the 'Watts' var
+        local usWatts = tonumber(luup.variable_get(ENERGY_METERING_SID, 'UserSuppliedWattage', lul_device) or '0')
+        updateVariable('Watts', tostring(usWatts*(targetValue/100.0)), ENERGY_METERING_SID, lul_device)
+	end
 end
 
 local function doQueryGroup(DALIaddress)
@@ -1948,9 +1998,9 @@ end
 
 -- transfer a value to its destination via the DTR
 function transferViaDTR(transferValue, toAddress, saveDTRas, arcSceneGroupOffsetStr)
-    transferValue       = tonumber(transferValue)
-    toAddress           = tonumber(toAddress)
-    arcSceneGroupOffset = tonumber(arcSceneGroupOffsetStr) or 0
+    transferValue = tonumber(transferValue)
+    toAddress     = tonumber(toAddress)
+    local arcSceneGroupOffset = tonumber(arcSceneGroupOffsetStr) or 0
 
     -- store the transferValue ---> DTR ---> saveDTRas in the DALIaddress
     local ok1 = executeDALIcommand('StoreValueDTR', transferValue)
@@ -2106,7 +2156,7 @@ local function getDALIaddress(lul_device)
     local veraAddress = tonumber(luup.devices[lul_device].id)  -- altid value
     if (veraAddress == nil) then debug('getDALIaddress(): veraAddress is nil') end
 
-    DALIaddress = addressMap[veraAddress]
+    local DALIaddress = addressMap[veraAddress]
     if (not DALIaddress) then debug('getDALIaddress() supplied with invalid DALI address') end
     return DALIaddress
 end
@@ -2223,8 +2273,8 @@ local function getDeviceInfo(lcParameters)
             if (ok and sceneLevel) then table.insert(deviceStatusTab, string.format('%-24s', 'scene level '..tostring(i))..tostring(sceneLevel)) end
         end
 
-        table.insert(deviceStatusTab, '\ncurrent fade time       '..fadeTimeStr)
-        table.insert(deviceStatusTab, 'current fade rate       '..fadeRateStr..'\n')
+        table.insert(deviceStatusTab, '\ncurrent fade rate       '..fadeRateStr)
+        table.insert(deviceStatusTab, 'current fade time       '..fadeTimeStr..'\n')
 
         table.insert(deviceStatusTab, 'version?                '..tostring(version))
         table.insert(deviceStatusTab, 'DTR contents            '..tostring(DTRcontents))
@@ -2237,7 +2287,7 @@ local function getDeviceInfo(lcParameters)
             table.insert(deviceStatusTab, string.format('%-24s', k)..tostring(v.b))
         end
     else
-        table.insert(deviceStatusTab, 'no device found at address: '..DALIaddressStr)
+        table.insert(deviceStatusTab, 'No device found at address: '..DALIaddressStr)
     end
 
     debug('FINISHED the getDeviceInfo() command: all OK',50)
@@ -2249,7 +2299,7 @@ end
 -- this can take some time to execute, so it is run as a job
 -- example format 'Group10: 4,6,63' or 'Empty'
 function getGroups()
-    if (m_busy) then return 4, nil else m_busy = true end
+    if (m_Busy) then return 4, nil else m_Busy = true end
 
     local addressList = luup.variable_get(PLUGIN_SID, 'Addresses', THIS_LUL_DEVICE) or ''
 
@@ -2282,7 +2332,7 @@ function getGroups()
     updateVariable('AllGroups', table.concat(allGroups, ' '))
 
     debug('FINISHED the Get Groups command',50)
-    m_busy = false
+    m_Busy = false
     return 4, nil -- job Done
 end
 
@@ -2290,7 +2340,7 @@ end
 -- big overhead in reading 16 levels from potentially 64 devices, so run this as a job
 -- example format: address.level: 'Scene4: 4.254,6.254,63.254' or 'Empty'
 function getScenes()
-    if (m_busy) then return 4, nil else m_busy = true end
+    if (m_Busy) then return 4, nil else m_Busy = true end
 
     local addressList = luup.variable_get(PLUGIN_SID, 'Addresses', THIS_LUL_DEVICE) or ''
 
@@ -2315,7 +2365,7 @@ function getScenes()
     updateVariable('AllScenes', table.concat(allScenes, ' '))
 
     debug('FINISHED the Get Scenes command',50)
-    m_busy = false
+    m_Busy = false
     return 4, nil -- job Done
 end
 
@@ -2323,7 +2373,7 @@ end
 -- this can take some time to execute, so it is run as a job.
 -- delete = -1, no change = 0, add = +1
 function setGroups()
-    if (m_busy) then return 4, nil else m_busy = true end
+    if (m_Busy) then return 4, nil else m_Busy = true end
 
     -- eg 'g0:e g1:e g2:e g3:0,1 g4:e g5:e g6:e g7:e g8:e g9:e g10:e g11:e g12:e g13:e g14:e g15:e'
     local changes = {}
@@ -2379,14 +2429,14 @@ function setGroups()
 
     if (not ok) then debug('setGroups() failed')
     else debug('FINISHED the Set Groups command',50) end
-    m_busy = false
+    m_Busy = false
     return 4, nil -- job Done
 end
 
 -- a service in the implementation file
 -- big overhead in writing 16 levels to potentially 64 devices, so run this as a job
 function setScenes()
-    if (m_busy) then return 4, nil else m_busy = true end
+    if (m_Busy) then return 4, nil else m_Busy = true end
 
     -- eg s0:e s1:e s2:e s3:e s4:e s5:e s6:1.170,2.170 s7:e s8:e s9:e s10:e s11:e s12:e s13:e s14:e s15:e
     local changes = {}
@@ -2462,7 +2512,7 @@ function setScenes()
 
     if (not ok) then debug('setScenes() failed')
     else debug('FINISHED the Set Scenes command',50) end
-    m_busy = false
+    m_Busy = false
     return 4, nil -- job Done
 end
 
@@ -2471,7 +2521,7 @@ end
 -- Takes about 6 secs per device for a Tridonic gateway in mode 1.
 -- We'll give it 10 minutes. It must be run as a job.
 function setShortAddresses()
-    if (m_busy) then return 4, nil else m_busy = true end
+    if (m_Busy) then return 4, nil else m_Busy = true end
 
     -- get a flag array of existing short addresses
     local existingAddr = {}
@@ -2559,7 +2609,7 @@ function setShortAddresses()
     debug('FINISHED the Set Short Addresses command: programmed '..tostring(devicesFoundCount)..' devices',50)
 
     -- the initialisation timer is still running but we can't shut it down
-    m_busy = false
+    m_Busy = false
     return 4, nil -- job Done
 end
 
@@ -2586,116 +2636,31 @@ function stopFading(DALIaddress)
     executeDALIcommand('DirectArcCommand', DALIaddress, DALI_MASK)
 end
 
---[[
--- a service in the implementation file
--- do the ON/OFF action
--- action:  SWP_SET_TARGET = 'SetTarget'
-function setTarget(lul_device, targetValue)
-    local HA_SID      = 'urn:micasaverde-com:serviceId:HaDevice1'
-    local SWP_SID     = 'urn:upnp-org:serviceId:SwitchPower1'
-    local SWP_STATUS  = 'Status'
-
-    local DALIaddress = getDALIaddress(lul_device)
-    local DALIcommand = 'Off'  -- with no fade
-    local status      = '0'
-
-    -- check if the command should be reversed for this device
-    local lul_reverse = luup.variable_get(HA_SID, 'ReverseOnOff', lul_device)
-
-    if ((targetValue == '1') or ((targetValue == '0') and (lul_reverse == '1'))) then
-        DALIcommand = 'RecallMaxLevel'  -- with no fade
-        status = '1'
-    end
-
-    local ok = executeDALIcommand(DALIcommand, DALIaddress)
-
-    if (not ok) then debug('setTarget() failed') return false end
-    updateVariable(SWP_STATUS, status, SWP_SID, lul_device)
-    return true
-end
-]]
-
--- a service in the implementation file
--- update the DIMMER's LoadLevelStatus
-function arcLoadLevelStatus(lul_device)
-    local SWD_SID               = 'urn:upnp-org:serviceId:Dimming1'
-    local SWD_LOAD_LEVEL_STATUS = 'LoadLevelStatus'
-
+-- update the dimmer's LoadLevelStatus
+local function queryActualLoadLevelStatus(lul_device)
     local DALIaddress = getDALIaddress(lul_device)
     local ok, theLevel = executeDALIcommand('QueryActualLevel', DALIaddress)
 
-    if (not ok) then debug('arcLoadLevelStatus() failed') return false end
+    if (not ok) then debug('queryActualLoadLevelStatus() failed') return false end
 
     local actualLevel = theLevel
     if (theLevel == nil) then
-        debug('arcLoadLevelStatus(): device at address '..tostring(DALIaddress)..' is probably not powered on',50)
+        debug('queryActualLoadLevelStatus(): device at address '..tostring(DALIaddress)..' is probably not powered on',50)
         actualLevel = 0
     end
 
-    local percent = math.ceil((actualLevel / DALI_MAX_LEVEL) * 100)
-    updateVariable(SWD_LOAD_LEVEL_STATUS, tostring(percent), SWD_SID, lul_device)
+    local percent = math.ceil((actualLevel / DALI_MAX_LEVEL) * 100.0)
+    updateDeviceStatus(percent, true, lul_device)
 
     if (theLevel == nil) then return false end
 
     return true
 end
 
--- a service in the implementation file
--- action:  do the DIMMING SetLoadLevelTarget
-function arcSetTarget(lul_device, targetValue)
-    local SWD_SID               = 'urn:upnp-org:serviceId:Dimming1'
-    local SWD_LOAD_LEVEL_STATUS = 'LoadLevelStatus'
-
-    targetValue = tonumber(targetValue)
-
-    local arcValue = 0
-    if (targetValue == 0) then
-        arcValue = 0
-    elseif (targetValue == 100) then
-        arcValue = DALI_MAX_LEVEL
-    elseif ((targetValue > 0) and (targetValue < 100)) then
-        arcValue = math.floor((targetValue/100) * DALI_MAX_LEVEL)
-    else
-        debug('invalid TargetValue in arcSetTarget()')
-        return false
-    end
-
-    if (not luup.devices[lul_device].id:find('Group')) then
-        local DALIaddress = getDALIaddress(lul_device)
-        local ok = executeDALIcommand('DirectArcCommand', DALIaddress, arcValue)
-        if (not ok) then debug('arcSetTarget() failed') return false end
-        updateVariable(SWD_LOAD_LEVEL_STATUS, tostring(targetValue), SWD_SID, lul_device)
-    else
-        local groupAddress = luup.devices[lul_device].id:match('%d+')
-        if (not (groupAddress and tonumber(groupAddress))) then debug('arcSetTarget() failed') return false end
-        debug('groupAddress = '..groupAddress)
-
-        local ok = executeDALIcommand('DirectArcCommand', tonumber(groupAddress) + GROUP_OFFSET, arcValue)
-        if (not ok) then debug('arcSetTarget() failed') return false end
-        updateVariable(SWD_LOAD_LEVEL_STATUS, tostring(targetValue), SWD_SID, lul_device)
-
-        -- for all the devices in the group update their level status
-        local groupList = luup.variable_get(PLUGIN_SID, 'Group'..tostring(groupAddress), THIS_LUL_DEVICE) or ''
-        for groupDevice in groupList:gmatch('%d+') do
-            for deviceID, v in pairs(luup.devices) do
-                -- v.device_num_parent is a number, v.id is a string, deviceID is a number
-                if ((v.device_num_parent == THIS_LUL_DEVICE) and (v.id == tostring(groupDevice))) then
-                    updateVariable(SWD_LOAD_LEVEL_STATUS, tostring(targetValue), SWD_SID, deviceID)
-                end
-            end
-        end
-    end
-    return true
-end
-
 --[[
-
 -- a service in the implementation file
 -- action:  do the DIMMING SetLoadLevelTarget
-function arcSetTarget(lul_device, targetValue)
-    local SWD_SID               = 'urn:upnp-org:serviceId:Dimming1'
-    local SWD_LOAD_LEVEL_STATUS = 'LoadLevelStatus'
-
+function setLoadLevelTarget(lul_device, targetValue)
     targetValue = tonumber(targetValue)
     local ok1 = true
     local ok2 = true
@@ -2713,14 +2678,16 @@ function arcSetTarget(lul_device, targetValue)
         ok3 = executeDALIcommand('DirectArcCommand', DALIaddress, arcValue)
     else
         ok1 = false
-        debug('invalid TargetValue in arcSetTarget()')
+        debug('invalid TargetValue in setLoadLevelTarget()')
     end
 
-    if (not (ok1 and ok2 and ok3)) then debug('arcSetTarget() failed') return false end
+    if (not (ok1 and ok2 and ok3)) then debug('setLoadLevelTarget() failed') return false end
 
-    -- HACK calling this results in getting incorrect values while the light is fading up/down
-    -- arcLoadLevelStatus(lul_device)
-    updateVariable(SWD_LOAD_LEVEL_STATUS, tostring(targetValue), SWD_SID, lul_device)
+    -- HACK calling queryActualLoadLevelStatus() while a lamp is fading up or down results  in the
+	-- immediate fade results being returned, so we can't use this command unless we know
+	-- that the fade has finished
+    -- queryActualLoadLevelStatus(lul_device)
+    updateVariable('LoadLevelStatus', tostring(targetValue), SWD_SID, lul_device)
 
     return true
 end
@@ -2729,26 +2696,23 @@ An attempt to account for the minPhysLevel offset. It's unresponsive:
 
 -- a service in the implementation file
 -- update the DIMMER's LoadLevelStatus
-function arcLoadLevelStatus(lul_device)
-    local SWD_SID               = 'urn:upnp-org:serviceId:Dimming1'
-    local SWD_LOAD_LEVEL_STATUS = 'LoadLevelStatus'
-
+function queryActualLoadLevelStatus(lul_device)
     local DALIaddress = getDALIaddress(lul_device)
     -- HACK to improve the responsivity of this action, max & phys values should probably be held as Vera vars
     local ok1, maxLevel     = executeDALIcommand('QueryMaxLevel',         DALIaddress)
     local ok2, actualLevel  = executeDALIcommand('QueryActualLevel',      DALIaddress)
     local ok3, minPhysLevel = executeDALIcommand('QueryPhysicalMinLevel', DALIaddress)
 
-    if (not (ok1 and ok2 and ok3)) then debug('arcLoadLevelStatus() failed') return false end
+    if (not (ok1 and ok2 and ok3)) then debug('queryActualLoadLevelStatus() failed') return false end
 
     local percent = math.ceil(((actualLevel - minPhysLevel) / (maxLevel - minPhysLevel)) * 100)
-    updateVariable(SWD_LOAD_LEVEL_STATUS, tostring(percent), SWD_SID, lul_device)
+    updateVariable('LoadLevelStatus', tostring(percent), SWD_SID, lul_device)
     return true
 end
 
 -- a service in the implementation file
 -- action:  do the DIMMING SetLoadLevelTarget
-function arcSetTarget(lul_device, targetValue)
+function setLoadLevelTarget(lul_device, targetValue)
     targetValue = tonumber(targetValue)
     local ok1 = true
     local ok2 = true
@@ -2769,21 +2733,115 @@ function arcSetTarget(lul_device, targetValue)
         ok3 = executeDALIcommand('DirectArcCommand', DALIaddress, arcValue)
     else
         ok1 = false
-        debug('invalid TargetValue in arcSetTarget()')
+        debug('invalid TargetValue in setLoadLevelTarget()')
     end
 
-    if (not (ok1 and ok2 and ok3)) then debug('arcSetTarget() failed') return false end
-    arcLoadLevelStatus(lul_device)
+    if (not (ok1 and ok2 and ok3)) then debug('setLoadLevelTarget() failed') return false end
+    queryActualLoadLevelStatus(lul_device)
     return true
 end
 
-]]
 -- a service in the implementation file
--- action:  execute DALI scene
-function runScene(cmdValueStr, arcSceneGroupOffsetStr)
-    local SWD_SID               = 'urn:upnp-org:serviceId:Dimming1'
-    local SWD_LOAD_LEVEL_STATUS = 'LoadLevelStatus'
+-- do the ON/OFF action
+function setTarget(lul_device, targetValue)
+    local HA_SID      = 'urn:micasaverde-com:serviceId:HaDevice1'
 
+    local DALIaddress = getDALIaddress(lul_device)
+    local DALIcommand = 'Off'  -- with no fade
+    local status      = '0'
+
+    -- check if the command should be reversed for this device
+    local lul_reverse = luup.variable_get(HA_SID, 'ReverseOnOff', lul_device)
+
+    if ((targetValue == '1') or ((targetValue == '0') and (lul_reverse == '1'))) then
+        DALIcommand = 'RecallMaxLevel'  -- with no fade
+        status = '1'
+    end
+
+    local ok = executeDALIcommand(DALIcommand, DALIaddress)
+
+    if (not ok) then debug('setTarget() failed') return false end
+    updateVariable('Status', status, SWP_SID, lul_device)
+    return true
+end
+]]
+
+-- a service in the implementation file
+-- do the DIMMING action
+-- If the DirectArcCommand returns OK, we assume the level change does in fact occur
+-- and we update the LoadLevelStatus var to match. If we checked the actual light status
+-- we would have to wait till any fade operations completed in order to get the correct
+-- status. For groups; we would potentially  have to interrogate a lot of lights as well.
+-- That's too much of an effort.
+function setLoadLevelTarget(lul_device, targetValue)
+    targetValue = tonumber(targetValue)
+
+    local arcValue = 0
+    if (targetValue == 0) then
+        arcValue = 0
+    elseif (targetValue == 100) then
+        arcValue = DALI_MAX_LEVEL
+    elseif ((targetValue > 0) and (targetValue < 100)) then
+        arcValue = math.floor((targetValue/100) * DALI_MAX_LEVEL)
+    else
+        debug('invalid TargetValue in setLoadLevelTarget()')
+        return false
+    end
+
+    if (not luup.devices[lul_device].id:find('Group')) then
+	    -- device is just a single light. Update the light and its status.
+        local DALIaddress = getDALIaddress(lul_device)
+        local ok = executeDALIcommand('DirectArcCommand', DALIaddress, arcValue)
+        if (not ok) then debug('setLoadLevelTarget() failed') return false end
+		updateDeviceStatus(targetValue, true, lul_device)
+
+    else -- device is a group of lights. Each light and its status needs to be updated.
+        local groupAddress = luup.devices[lul_device].id:match('%d+')
+        if (not (groupAddress and tonumber(groupAddress))) then debug('setLoadLevelTarget() failed') return false end
+        debug('groupAddress = '..groupAddress)
+
+        -- update the status of the group device. It doesn't have or a need for a 'Watts' variable
+        local ok = executeDALIcommand('DirectArcCommand', tonumber(groupAddress) + GROUP_OFFSET, arcValue)
+        if (not ok) then debug('setLoadLevelTarget() failed') return false end
+		updateDeviceStatus(targetValue, false, lul_device)
+
+        -- for all the lights in the group device; update their status
+        local groupList = luup.variable_get(PLUGIN_SID, 'Group'..tostring(groupAddress), THIS_LUL_DEVICE) or ''
+        for groupDevice in groupList:gmatch('%d+') do
+            for deviceID, v in pairs(luup.devices) do
+                -- v.device_num_parent is a number, v.id is a string, deviceID is a number
+                if ((v.device_num_parent == THIS_LUL_DEVICE) and (v.id == tostring(groupDevice))) then
+		            updateDeviceStatus(targetValue, true, deviceID)
+                end
+            end
+        end
+    end
+    return true
+end
+
+-- a service in the implementation file
+-- do the ON/OFF action
+function setTarget(lul_device, targetValue)
+    local ok = false
+    targetValue = tonumber(targetValue)
+    if (targetValue == 0) then
+        ok = setLoadLevelTarget(lul_device, 0)
+    elseif (targetValue == 1) then
+        ok = setLoadLevelTarget(lul_device, 100)
+    end
+
+    if (not ok) then debug('setTarget() failed') return false end
+    return true
+end
+
+--[[
+a service in the implementation file
+action:  execute DALI scene
+
+Sixrteen scenes can be set up. When a scene command is sent, all DALI devices check to see if they are
+included in that particular scene. If they are part of the scene, then the DALI device reacts accordingly.
+]]
+function runScene(cmdValueStr, arcSceneGroupOffsetStr)
     local ok  = true
     local sceneAddress = tonumber(cmdValueStr)
     local sceneNumber  = tonumber(arcSceneGroupOffsetStr)
@@ -2846,7 +2904,7 @@ function runScene(cmdValueStr, arcSceneGroupOffsetStr)
 
         local percent = math.ceil((lev / DALI_MAX_LEVEL) * 100)
         -- HACK debug('device id: '..tostring(lul_device)..', percent = '..tostring(percent))
-        updateVariable(SWD_LOAD_LEVEL_STATUS, tostring(percent), SWD_SID, lul_device)
+        updateDeviceStatus(percent, true, lul_device)
     end
 
     return ok
@@ -2855,22 +2913,17 @@ end
 -- a service in the implementation file
 -- send a single command to the DALI gateway - primarily for testing
 -- function needs to be global
-function DALIcommand(cmdStr, cmdValueStr, arcSceneGroupOffsetStr)
-    local ok                  = false
-    local result              = nil
-    local cmdValue            = tonumber(cmdValueStr)
-    local arcSceneGroupOffset = tonumber(arcSceneGroupOffsetStr) or 0
-
-    if (cmdStr and cmdValue) then
-        ok, result = executeDALIcommand(cmdStr, cmdValue, arcSceneGroupOffset)
-    else
-        debug('DALIcommand() failed: cmdStr or cmdValueStr are nil')
-    end
+-- Typically value1 is a DALIaddress and value2 is optional associated data
+-- Note however; some commands do not require value1 and value2 to be supplied eg see function cmdValueRequired()
+function DALIcommand(cmdStr, value1, value2)
+	-- lower levels will validate all the passed parameters
+    local ok, result = executeDALIcommand(cmdStr, value1, value2)
+    if (not ok) then debug('DALIcommand error detected - refer to previous log entries for finer detail') end
     return ok, result
 end
 
 -- a service in the implementation file
--- change a DALI short address. Checks to prevent the creation of duplicates are implemented.
+-- change a DALI short address. Code ensures duplicates are not created.
 function changeShortAddress(oldDALIaddressStr, newDALIaddressStr)
     local oldDALIaddress = tonumber(oldDALIaddressStr)
     local newDALIaddress = tonumber(newDALIaddressStr)
@@ -2937,7 +2990,7 @@ end
 -- a service in the implementation file
 -- action:  read all the fade rates and times
 function getFadeValues()
-    if (m_busy) then return 4, nil else m_busy = true end
+    if (m_Busy) then return 4, nil else m_Busy = true end
     local ok = true
 
     for light in daliLights() do
@@ -2957,14 +3010,14 @@ function getFadeValues()
 
     if (not ok) then debug('getFadeValues() failed')
     else debug('FINISHED the Get Fade Values command',50) end
-    m_busy = false
+    m_Busy = false
     return 4, nil -- job Done
 end
 
 -- a service in the implementation file
 -- action:  write all the fade rates and times
 function setFadeValues()
-    if (m_busy) then return 4, nil else m_busy = true end
+    if (m_Busy) then return 4, nil else m_Busy = true end
     local ok = true
 
     for light in daliLights() do
@@ -2984,14 +3037,14 @@ function setFadeValues()
 
     if (not ok) then debug('setFadeValues() failed')
     else debug('FINISHED the Set Fade Values command',50) end
-    m_busy = false
+    m_Busy = false
     return 4, nil -- job Done
 end
 
 -- a service in the implementation file
 -- action:  read all the power on levels
 function getPowerOnLevels()
-    if (m_busy) then return 4, nil else m_busy = true end
+    if (m_Busy) then return 4, nil else m_Busy = true end
     local ok = true
 
     for light in daliLights() do
@@ -3010,14 +3063,14 @@ function getPowerOnLevels()
 
     if (not ok) then debug('getPowerOnLevels() failed')
     else debug('FINISHED the Get Power On Levels command',50) end
-    m_busy = false
+    m_Busy = false
     return 4, nil -- job Done
 end
 
 -- a service in the implementation file
 -- action:  write all the power on levels
 function setPowerOnLevels()
-    if (m_busy) then return 4, nil else m_busy = true end
+    if (m_Busy) then return 4, nil else m_Busy = true end
     local ok = true
 
     for light in daliLights() do
@@ -3035,7 +3088,7 @@ function setPowerOnLevels()
 
     if (not ok) then debug('setPowerOnLevels() failed')
     else debug('FINISHED the Set Power On Levels command',50) end
-    m_busy = false
+    m_Busy = false
     return 4, nil -- job Done
 end
 
@@ -3063,10 +3116,60 @@ function runTest(value1, value2, value3)
     DEBUG_MODE = luup.variable_get(PLUGIN_SID, 'DebugEnabled', THIS_LUL_DEVICE)
 end
 
+-- Prod the DALI gateway device. Function needs to be global.
+-- We do this because communications will shut down on some platforms (eg RasPi but not on a Vera 3) unless regularly prodded.
+-- This may all be related to the settings used in the /etc/sysctl.conf file ??:
+-- Vera 3 sets the file to contain: net.ipv4.tcp_keepalive_time=120
+-- The usual defaults are: tcp_keepalive_time = 7200 (seconds) tcp_keepalive_intvl = 75 (seconds) tcp_keepalive_probes = 9 (number of probes)
+-- Note that the CheckGateway command performs no action on the actual DALI bus
+function runHeartBeat()
+    if (m_HeartBeatEnable ~= '1') then return end
+
+    local ok = executeDALIcommand('CheckGateway')
+    if (not ok) then
+        debug('DALI heart beat: gateway did not reply - possible loss of communications with gateway.')
+    end
+
+    -- prod the gateway regularly
+    luup.call_delay('runHeartBeat', m_HeartBeatInterval)
+end
+
 -- web page for the device status
 local function htmlIntroPage()
     local title  = 'DALI Planet'
     local header = 'DALI Planet ver: '..PLUGIN_VERSION
+
+    local DALIinfoTab = {}   -- all in a pre tag so use linefeeds, not html breaks
+
+    table.insert(DALIinfoTab, 'Number of groups: '..tostring(m_GroupCount))
+    table.insert(DALIinfoTab, 'Number of lights: '..tostring(m_LightCount)..'   - RGBW LED strips count as 4 lights')
+    table.insert(DALIinfoTab, 'Unpowered lights: '..tostring(m_UnpoweredCount)..'\n')
+
+    table.insert(DALIinfoTab, 'The DALI devices listed here and in bold below, were probably not powered on, when the Luup engine was started:')
+    local unpoweredStr = table.concat(m_UnpoweredLights,',')..',\n'
+
+    table.insert(DALIinfoTab, unpoweredStr)
+	table.insert(DALIinfoTab, ' Id   Description                           Room                  Watts   fr   ft')
+
+	local wattsTotal = 0
+    for k, v in pairs(luup.devices) do
+        -- we're only interested in the DALI devices
+        if (v.device_num_parent == THIS_LUL_DEVICE) then
+		    -- note that 'groups' will be displayed but they may not have all vars set or even available
+		    local fadeRate = luup.variable_get(PLUGIN_SID, 'FadeRate', k) or 'na'
+		    local fadeTime = luup.variable_get(PLUGIN_SID, 'FadeTime', k) or 'na'
+		    local watts    = luup.variable_get(ENERGY_METERING_SID, 'Watts', k)
+			local watts = tonumber(watts) or 0
+			wattsTotal = wattsTotal + watts
+			local line = string.format('%3i   %-36s  %-20s  %5.1f   %2s   %2s', k, v.description, luup.rooms[v.room_num], watts, fadeRate, fadeTime)
+		    if (string.find(unpoweredStr,k..',')) then
+			    table.insert(DALIinfoTab, '<b>'..line..'</b>')
+			else
+			    table.insert(DALIinfoTab, line)
+			end
+		end
+    end
+	table.insert(DALIinfoTab, string.format('\nTotal Watts: %.1f', wattsTotal))
 
     local strTab = {
     htmlHeader(),
@@ -3076,10 +3179,15 @@ local function htmlIntroPage()
     '<body>',
     '<h3>'..header..'</h3>',
     '<div>',
-    'Enter DALI address --> <input id="daliAddressID" type="text" name="daliAddress" value=""/>',
+    'Enter a DALI address --> <input id="daliAddressID" type="text" name="daliAddress" value=""/>',
     '<input id="submitBtnID" type="button" name="submitBtn" value="Submit"/><br/><br/>',
     '<pre id="deviceStatusID">',
     '</pre>',
+	'<hr/>',
+    '<pre>',
+    table.concat(DALIinfoTab, '\n'),
+    '</pre>',
+	'<hr/><br/>',
     '</div>',
     '</body>',
     '</html>'
@@ -3103,9 +3211,9 @@ function requestMain (lul_request, lul_parameters, lul_outputformat)
 
     -- output the intro page?
     if not lcParameters.fnc then
-        if (m_busy) then return '' else m_busy = true end
+        if (m_Busy) then return '' else m_Busy = true end
         local page = htmlIntroPage()
-        m_busy = false
+        m_Busy = false
         return page
     end -- no 'fnc' parameter so do the intro
 
@@ -3146,6 +3254,26 @@ function luaStartUp(lul_device)
         pluginEnabled = '1'
         updateVariable('PluginEnabled', pluginEnabled)
     end
+
+    -- Vera doesn't need the heartbeat. Note however RasPI does.
+    local heartBeatEnable = luup.variable_get(PLUGIN_SID, 'HeartBeatEnable', THIS_LUL_DEVICE)
+    if ((heartBeatEnable == nil) or (heartBeatEnable == '')) then
+        -- Set the heartBeat to on. Vera doesn't need it but it does no harm.
+		-- The user can turn it off if they so wish later.
+        heartBeatEnable = '1'
+        updateVariable('HeartBeatEnable', heartBeatEnable)
+    end
+    m_HeartBeatEnable = heartBeatEnable
+
+    -- don't allow the heartbeat to be any faster than twenty minutes.
+	-- any shorter than 30 minutes seems to fail on a RasPi
+    local heartBeatInterval = luup.variable_get(PLUGIN_SID, 'HeartBeatInterval', THIS_LUL_DEVICE)
+    local theInterval = tonumber(heartBeatInterval)
+    if ((theInterval == nil) or (theInterval < TWENTY_MINUTES)) then
+        theInterval = TWENTY_MINUTES
+        updateVariable('HeartBeatInterval', tostring(theInterval))
+    end
+    m_HeartBeatInterval = theInterval
 
     -- the user must enter a gateway type
     local gatewayType = luup.variable_get(PLUGIN_SID, 'GatewayType', THIS_LUL_DEVICE) or ''
@@ -3210,6 +3338,7 @@ function luaStartUp(lul_device)
             '',     -- implementation filename
             '',     -- parameters
             false)  -- embedded
+		m_LightCount = m_LightCount+1
     end
 
     -- do the groups as well
@@ -3228,6 +3357,7 @@ function luaStartUp(lul_device)
                 '',     -- implementation filename
                 '',     -- parameters
                 false)  -- embedded
+	    m_GroupCount = m_GroupCount+1
         end
     end
     luup.chdev.sync(THIS_LUL_DEVICE, child_devices)
@@ -3243,24 +3373,19 @@ function luaStartUp(lul_device)
 
     setPowerConsumption(10.0)
 
-    local unpoweredFound  = false
-    local unpoweredLights = {}
-
     -- update the current level status for each light
     for light in daliLights() do
-        local ok1 = arcLoadLevelStatus(light)
+        local ok1 = queryActualLoadLevelStatus(light)
 
         if (not ok1) then
-            table.insert(unpoweredLights, tostring(light))
-            unpoweredFound = true
+		    m_UnpoweredCount = m_UnpoweredCount+1
+            table.insert(m_UnpoweredLights, tostring(light))
         end
     end
 
-    if (unpoweredFound) then
-        local unpoweredLightsStr = 'Devices: '..table.concat(unpoweredLights,',')..' are probably not powered on'
-        debug(unpoweredLightsStr,50)
-        m_TaskHandle = luup.task(unpoweredLightsStr, TASK_ERROR, PLUGIN_NAME, m_TaskHandle)
-    end
+    -- prod the gateway regularly if enabled
+	-- this ensures the comms to the gateway stays open
+    runHeartBeat()
 
     -- required for UI7. UI5 uses true or false for the passed parameter.
     -- UI7 uses 0 or 1 or 2 for the parameter. This works for both UI5 and UI7

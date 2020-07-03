@@ -49,13 +49,13 @@
         </stateVariable>
 
         <stateVariable sendEvents="no">
-        <name>A_ARG_TYPE_Address</name>
+        <name>A_ARG_TYPE_Value_1</name>
         <shortCode>address</shortCode>
         <dataType>string</dataType>
         </stateVariable>
 
         <stateVariable sendEvents="no">
-        <name>A_ARG_TYPE_Data</name>
+        <name>A_ARG_TYPE_Value_2</name>
         <shortCode>data</shortCode>
         <dataType>string</dataType>
         </stateVariable>
@@ -168,14 +168,14 @@
                     <relatedStateVariable>A_ARG_TYPE_Command</relatedStateVariable>
                 </argument>
                 <argument>
-                    <name>Address</name>
+                    <name>Value1</name>
                     <direction>in</direction>
-                    <relatedStateVariable>A_ARG_TYPE_Address</relatedStateVariable>
+                    <relatedStateVariable>A_ARG_TYPE_Value_1</relatedStateVariable>
                 </argument>
                 <argument>
-                    <name>Data</name>
+                    <name>Value2</name>
                     <direction>in</direction>
-                    <relatedStateVariable>A_ARG_TYPE_Data</relatedStateVariable>
+                    <relatedStateVariable>A_ARG_TYPE_Value_2</relatedStateVariable>
                 </argument>
             </argumentList>
         </action>
